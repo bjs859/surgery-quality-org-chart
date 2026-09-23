@@ -6,6 +6,7 @@
 <title>UCSF Department of Surgery Quality Org Chart</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 :root{
   --navy:#052049; --navy-2:#0d3268; --teal:#0f8b93; --teal-soft:#dff3f4; --gold:#c69214;
@@ -155,12 +156,7 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
       <button class="btn" id="expandAll">Expand rosters</button>
       <button class="btn" id="collapseAll">Collapse rosters</button>
       <button class="btn" id="addDiv">Add division</button>
-      <button class="btn" id="exportBtn">Export JSON</button>
-      <button class="btn" id="importBtn">Import JSON</button>
-      <input type="file" id="importFile" accept="application/json" class="hidden">
-      <button class="btn" id="printBtn">Print / PDF</button>
-      <button class="btn" id="uploadLocal" style="display:none">Upload my browser copy to the sheet</button>
-      <button class="btn danger" id="resetBtn">Reset to seed</button>
+      <button class="btn" id="excelBtn">Export to Excel</button>
       <span class="status" id="status"></span>
     </div>
   </div>
@@ -434,7 +430,6 @@ async function connect(){
     if(d&&d.divisions){ data=migrate(d); lastServer=JSON.stringify(data); }
     else { const local=loadLocal(); data=local||migrate(seed()); }
     sub.textContent='UCSF Health. Click any name to edit. Changes save to the shared Google Sheet and appear for every editor.';
-    if(loadLocal()&&JSON.stringify(loadLocal())!==lastServer)uploadLocal.style.display='';
     render();
     polling=setInterval(async()=>{ try{ const d=await fetchServer(); const s=JSON.stringify(migrate(d)); if(s!==lastServer&&s!==JSON.stringify(data)){ lastServer=s; data=JSON.parse(s); if(dlg.open||dlgDiv.open)pendingRender=true; else { render(); flash('Updated from shared sheet'); } } }catch(e){} },30000);
   }catch(e){
@@ -442,10 +437,6 @@ async function connect(){
     sub.textContent='UCSF Health. Could not reach the shared sheet; showing the last copy saved in this browser. Reload to retry.'; render();
   }
 }
-uploadLocal.onclick=()=>arm(uploadLocal,'Click again to overwrite the sheet with my browser copy',()=>{
-  const local=loadLocal(); if(!local){ flash('No browser copy found'); return; }
-  data=local; save(); render(); uploadLocal.style.display='none';
-});
 document.getElementById('dlg').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
 document.getElementById('dlgDiv').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
 function flash(t){ const s=document.getElementById('status'); s.textContent=t; clearTimeout(flash.t); flash.t=setTimeout(()=>s.textContent='',1800); }
@@ -582,11 +573,37 @@ let condensed=false; try{ condensed=localStorage.getItem('ucsf-org-condensed')==
 function applyCondensed(){ document.getElementById('divisions').classList.toggle('condensed',condensed); divToggle.textContent=condensed?'Divisions (Condensed)':'Divisions (Expanded)'; }
 divToggle.onclick=()=>{ condensed=!condensed; try{ localStorage.setItem('ucsf-org-condensed',condensed?'1':'0'); }catch(e){} applyCondensed(); };
 applyCondensed();
-printBtn.onclick=()=>{ data.divisions.forEach(d=>openState[d.id]=true); render(); setTimeout(()=>window.print(),150); };
-resetBtn.onclick=()=>arm(resetBtn,'Click again to reset the shared sheet for everyone',()=>{ data=migrate(seed()); save(); render(); flash('Reset'); });
-exportBtn.onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); a.download='ucsf-surgery-quality-org-chart.json'; a.click(); };
-importBtn.onclick=()=>importFile.click();
-importFile.onchange=()=>{ const f=importFile.files[0]; if(!f)return; f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d.divisions)throw 0; data=migrate(d); save(); render(); flash('Imported'); }catch(e){ flash('That file is not a chart export'); } }); importFile.value=''; };
+excelBtn.onclick=async()=>{
+  if(typeof ExcelJS==='undefined'){ flash('Excel library did not load; check connection'); return; }
+  const wb=new ExcelJS.Workbook(); wb.creator='UCSF Surgery Quality';
+  const style=(ws,widths)=>{ widths.forEach((w,i)=>{ ws.getColumn(i+1).width=w; }); ws.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}}; ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF052049'}};
+    ws.eachRow(r=>{ r.alignment={wrapText:true,vertical:'top'}; r.eachCell(c=>{ c.border={bottom:{style:'thin',color:{argb:'FFD9DDE3'}}}; }); }); ws.views=[{state:'frozen',ySplit:1}]; };
+  const q=p=>p.q||[]; const first=t=>(t||'').split('\n')[0];
+  const sum=wb.addWorksheet('Summary');
+  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)']);
+  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','']);
+  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'']);
+  data.divisions.forEach(d=>{
+    const chief=d.members.filter(p=>p.role==='chief').map(p=>p.name).join('\n');
+    const reps=d.members.filter(p=>q(p).includes('rep')).map(p=>p.name).join('\n');
+    const mm=d.members.filter(p=>q(p).includes('mm')).map(p=>p.name).join('\n');
+    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned']);
+  });
+  style(sum,[36,40,40,40]);
+  sum.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
+  const ros=wb.addWorksheet('Roster');
+  ros.addRow(['Division','Name','Title','Chart role','Quality representative','M&M leader','Notes']);
+  const roleLabel={chief:'Chief','section-chief':'Section chief',faculty:'Faculty',staff:'Staff','quality-rep':'Faculty'};
+  ros.addRow(['Department leadership',data.chair.name,data.chair.title,'Chair','','',data.chair.notes||'']);
+  ros.addRow(['Department leadership',data.qualityChair.name,data.qualityChair.title,'Vice Chair, Quality and Safety','','',data.qualityChair.notes||'']);
+  data.support.forEach(p=>ros.addRow(['Department quality support',p.name,p.title||'','Staff',q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',p.notes||'']));
+  data.divisions.forEach(d=>[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name))
+    .forEach(p=>ros.addRow([d.name,p.name,p.title||'',roleLabel[p.role]||p.role,q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',p.notes||''])));
+  style(ros,[30,34,48,16,14,12,36]); ros.autoFilter={from:'A1',to:'G1'};
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  a.download='UCSF-Surgery-Quality-Org-Chart-'+new Date().toISOString().slice(0,10)+'.xlsx'; a.click(); flash('Excel file downloaded');
+};
 
 /* search */
 const q=document.getElementById('q'); q.addEventListener('input',applySearch);
