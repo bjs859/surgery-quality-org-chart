@@ -61,12 +61,13 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .hlink{align-self:center;width:44px;height:0;border-top:2px dotted var(--gold);flex:0 0 44px}
 @media (max-width:900px){.hlink{width:0;height:26px;flex:0 0 100%;border-top:0;border-left:2px dotted var(--gold);margin:0 auto;align-self:auto;width:0}}
 #vcTier{align-items:stretch;flex-wrap:wrap}
-.dotted-label{text-align:center;font-size:12px;color:var(--muted);margin:-4px 0 6px}
+.dotted-label{text-align:center;font-size:12px;color:var(--muted);margin:22px 0 10px}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);position:relative}
 .card.lead{width:min(100%,400px);padding:12px 14px;border-top:4px solid var(--navy)}
 .card.lead.rep{border-top-color:var(--teal)}
-.card.support{width:min(100%,400px);padding:12px 14px;border-top:4px solid var(--gold)}
+.card.support{width:min(100%,400px);padding:12px 14px;border-top:4px solid var(--teal)}
+.card.support .support-label{color:var(--teal)}
 
 .person{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
 .person .role-dot{flex:0 0 10px;width:10px;height:10px;border-radius:2px;margin-top:6px;background:var(--line)}
@@ -91,6 +92,7 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .vice-row summary{cursor:pointer;font-size:13px;color:var(--muted);text-align:center;list-style:none}
 .vice-row summary::-webkit-details-marker{display:none}
 .vice-row summary::after{content:" (show)"}
+#divRow>summary{font-size:15px;font-weight:700;color:var(--navy)}
 .vice-row[open] summary::after{content:" (hide)"}
 .vice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
 .vice-grid .card{padding:8px 10px}
@@ -169,13 +171,12 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
   <div class="connector"></div>
   <div class="tier" id="vcTier"></div>
   <div class="dotted-label">Dotted line: reports to the Department of Adult Quality and Patient Safety; supports the Vice Chair of Quality and Safety</div>
-  <details class="vice-row" id="viceRow">
-    <summary>Other vice chairs</summary>
-    <div class="vice-grid" id="viceGrid"></div>
+  <details class="vice-row" id="divRow" open>
+    <summary>Divisions</summary>
+    <div class="connector"></div>
+    <div class="connector wide"></div>
+    <div class="divisions" id="divisions"></div>
   </details>
-  <div class="connector"></div>
-  <div class="connector wide"></div>
-  <div class="divisions" id="divisions"></div>
 </main>
 
 <footer>
@@ -462,11 +463,9 @@ function personHTML(p,ctx){
 function render(){
   document.getElementById('chairTier').innerHTML=`<div class="card lead">${personHTML(data.chair,'chair')}</div>`;
   document.getElementById('vcTier').innerHTML=
-    `<div class="card lead rep">${personHTML(data.qualityChair,'qualityChair')}</div><div class="hlink" aria-hidden="true"></div><div class="card support"><div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">Department quality support</div>
+    `<div class="card lead rep">${personHTML(data.qualityChair,'qualityChair')}</div><div class="hlink" aria-hidden="true"></div><div class="card support"><div class="support-label" style="font-size:12px;font-weight:700;margin-bottom:4px">Department quality support</div>
        ${data.support.map(p=>personHTML(p,'support')).join('')}
        <button class="btn sm" data-add="support" style="margin-top:6px">Add staff</button></div>`;
-  document.getElementById('viceGrid').innerHTML=data.viceChairs.map(p=>`<div class="card">${personHTML(p,'viceChairs')}</div>`).join('')
-    +`<div class="card" style="display:flex;align-items:center"><button class="btn sm" data-add="viceChairs">Add vice chair</button></div>`;
 
   document.getElementById('divisions').innerHTML=data.divisions.map(d=>{
     const m=[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name));
