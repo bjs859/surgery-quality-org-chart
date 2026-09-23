@@ -92,7 +92,13 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .vice-row summary{cursor:pointer;font-size:13px;color:var(--muted);text-align:center;list-style:none}
 .vice-row summary::-webkit-details-marker{display:none}
 .vice-row summary::after{content:" (show)"}
-#divRow>summary{font-size:15px;font-weight:700;color:var(--navy)}
+.div-toggle-row{text-align:center;margin:14px 0 0}
+.div-toggle{border:0;background:none;font-size:15px;font-weight:700;color:var(--navy);padding:4px 8px;border-radius:4px}
+.div-toggle:hover{background:var(--surface)}
+.div-toggle::after{content:" \25BE";font-size:12px}
+.divisions.condensed .band,.divisions.condensed .roster,.divisions.condensed .div-foot,.divisions.condensed .count{display:none}
+.divisions.condensed .div-head{border-bottom:0}
+.divisions.condensed .div-body{padding-bottom:4px}
 .vice-row[open] summary::after{content:" (hide)"}
 .vice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
 .vice-grid .card{padding:8px 10px}
@@ -171,12 +177,10 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
   <div class="connector"></div>
   <div class="tier" id="vcTier"></div>
   <div class="dotted-label">Dotted line: reports to the Department of Adult Quality and Patient Safety; supports the Vice Chair of Quality and Safety</div>
-  <details class="vice-row" id="divRow" open>
-    <summary>Divisions</summary>
-    <div class="connector"></div>
-    <div class="connector wide"></div>
-    <div class="divisions" id="divisions"></div>
-  </details>
+  <div class="div-toggle-row"><button class="div-toggle" id="divToggle" type="button">Divisions (Expanded)</button></div>
+  <div class="connector"></div>
+  <div class="connector wide"></div>
+  <div class="divisions" id="divisions"></div>
 </main>
 
 <footer>
@@ -574,6 +578,10 @@ document.addEventListener('toggle',e=>{ const r=e.target.dataset&&e.target.datas
 addDiv.onclick=()=>openDiv(null);
 expandAll.onclick=()=>{data.divisions.forEach(d=>openState[d.id]=true);render();};
 collapseAll.onclick=()=>{data.divisions.forEach(d=>openState[d.id]=false);render();};
+let condensed=false; try{ condensed=localStorage.getItem('ucsf-org-condensed')==='1'; }catch(e){}
+function applyCondensed(){ document.getElementById('divisions').classList.toggle('condensed',condensed); divToggle.textContent=condensed?'Divisions (Condensed)':'Divisions (Expanded)'; }
+divToggle.onclick=()=>{ condensed=!condensed; try{ localStorage.setItem('ucsf-org-condensed',condensed?'1':'0'); }catch(e){} applyCondensed(); };
+applyCondensed();
 printBtn.onclick=()=>{ data.divisions.forEach(d=>openState[d.id]=true); render(); setTimeout(()=>window.print(),150); };
 resetBtn.onclick=()=>arm(resetBtn,'Click again to reset the shared sheet for everyone',()=>{ data=migrate(seed()); save(); render(); flash('Reset'); });
 exportBtn.onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); a.download='ucsf-surgery-quality-org-chart.json'; a.click(); };
