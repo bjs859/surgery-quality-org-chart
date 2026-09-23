@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UCSF Department of Surgery Quality Org Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#052049; --navy-2:#0d3268; --teal:#0f8b93; --teal-soft:#dff3f4; --gold:#c69214;
+  --bg:#f5f6f8; --surface:#ffffff; --line:#d9dde3; --text:#1c2431; --muted:#5d6675;
+  --danger:#b0342d; --shadow:0 1px 2px rgba(5,32,73,.08);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --navy:#c9d6ee; --navy-2:#9fb4dc; --teal:#4fc3ca; --teal-soft:#0f2e31; --gold:#e2b542;
+  --bg:#12161d; --surface:#1b2129; --line:#323a46; --text:#e6eaf0; --muted:#98a2b3; --danger:#f07d76; --shadow:none;
+}}
+:root[data-theme="dark"]{
+  --navy:#c9d6ee; --navy-2:#9fb4dc; --teal:#4fc3ca; --teal-soft:#0f2e31; --gold:#e2b542;
+  --bg:#12161d; --surface:#1b2129; --line:#323a46; --text:#e6eaf0; --muted:#98a2b3; --danger:#f07d76; --shadow:none;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Source Sans 3",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.4}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:7px 9px;width:100%}
+textarea{min-height:64px;resize:vertical}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:2px solid var(--navy);padding:12px 18px}
+.hd-row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;max-width:1500px;margin:0 auto}
+h1{font-size:19px;font-weight:700;color:var(--navy);margin:0;letter-spacing:-.01em}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tools input[type=search]{width:220px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:7px 11px;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--navy-2)}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn.primary:hover{background:var(--navy-2)}
+.btn.danger{color:var(--danger)}
+.btn.danger.arm{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn.sm{padding:3px 8px;font-size:12px;font-weight:600}
+.status{font-size:12px;color:var(--muted);min-width:90px}
+
+/* chart */
+main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin:0 0 18px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.legend .l-chief::before{background:var(--navy)}
+.legend .l-rep::before{background:var(--teal)}
+.legend .l-sec::before{background:var(--gold)}
+.legend .l-fac::before{background:var(--line)}
+
+.tier{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;position:relative}
+.connector{width:2px;height:22px;background:var(--line);margin:0 auto}
+.connector.wide{height:2px;width:min(92%,1100px);margin:0 auto}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);position:relative}
+.card.lead{width:min(100%,400px);padding:12px 14px;border-top:4px solid var(--navy)}
+.card.lead.rep{border-top-color:var(--teal)}
+.card.support{width:min(100%,400px);padding:12px 14px;border-top:4px solid var(--gold)}
+
+.person{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.person .role-dot{flex:0 0 10px;width:10px;height:10px;border-radius:2px;margin-top:6px;background:var(--line)}
+.person.chief .role-dot{background:var(--navy)}
+.person.section-chief .role-dot{background:var(--gold)}
+.person.quality-rep .role-dot,.person.has-q .role-dot{background:var(--teal)}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--teal);color:#fff}
+.tag.mm{background:var(--navy)}
+.checks{display:flex;gap:16px;font-size:14px}
+.checks label{display:flex;align-items:center;gap:5px;font-weight:600;color:var(--text);font-size:14px;margin:0}
+.person .who{flex:1;min-width:0}
+.person .name{font-weight:600;line-height:1.25}
+.person .title{font-size:12.5px;color:var(--muted);line-height:1.3;white-space:pre-line}
+.person .notes{font-size:12px;color:var(--teal);margin-top:2px}
+.person .act{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+.person:hover .act,.person:focus-within .act{opacity:1}
+.icon{border:0;background:transparent;padding:2px 5px;border-radius:3px;font-size:13px;color:var(--muted)}
+.icon:hover{background:var(--bg);color:var(--text)}
+
+.vice-row{margin:14px auto 0;max-width:1100px}
+.vice-row summary{cursor:pointer;font-size:13px;color:var(--muted);text-align:center;list-style:none}
+.vice-row summary::-webkit-details-marker{display:none}
+.vice-row summary::after{content:" (show)"}
+.vice-row[open] summary::after{content:" (hide)"}
+.vice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
+.vice-grid .card{padding:8px 10px}
+
+.divisions{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:22px}
+.div-card{border-top:4px solid var(--navy);display:flex;flex-direction:column}
+.div-head{padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid var(--line)}
+.div-head h2{margin:0;font-size:16px;font-weight:700;color:var(--navy);line-height:1.2}
+.div-head .count{font-size:12px;color:var(--muted);font-weight:400;display:block;margin-top:2px}
+.div-body{padding:6px 14px 10px}
+.band{margin:8px -14px 4px;padding:6px 14px;background:var(--teal-soft);border-left:4px solid var(--teal)}
+.band .band-label{font-size:12px;font-weight:700;color:var(--teal);margin-bottom:2px}
+.band .empty{font-size:13px;color:var(--muted);font-style:italic}
+.band .empty button{margin-left:6px}
+.roster{margin-top:6px}
+.roster summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);padding:6px 0;list-style:none;display:flex;justify-content:space-between}
+.roster summary::-webkit-details-marker{display:none}
+.roster summary .chev::before{content:"Show"}
+.roster[open] summary .chev::before{content:"Hide"}
+.div-foot{padding:6px 14px 12px;display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.hidden{display:none !important}
+.match{background:rgba(198,146,20,.18);border-radius:2px}
+
+/* modal */
+dialog{border:0;border-radius:8px;padding:0;width:min(94vw,460px);background:var(--surface);color:var(--text);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(5,32,73,.45)}
+.modal{padding:18px 20px 16px}
+.modal h3{margin:0 0 12px;font-size:17px;color:var(--navy)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:3px}
+.modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
+.modal-actions .right{display:flex;gap:6px}
+
+footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color:var(--muted)}
+
+@media print{
+  header .tools,.div-foot,.act,.legend,footer,.band .empty button{display:none !important}
+  body{background:#fff}
+  .roster{display:block}
+  .roster summary{display:none}
+  .divisions{grid-template-columns:repeat(2,1fr)}
+  .card{break-inside:avoid;box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <h1>Department of Surgery quality representatives
+      <small id="subtitle">UCSF Health. Click any name to edit. Connecting to the shared sheet.</small></h1>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Find a person or division" aria-label="Search">
+      <button class="btn" id="expandAll">Expand rosters</button>
+      <button class="btn" id="collapseAll">Collapse rosters</button>
+      <button class="btn" id="addDiv">Add division</button>
+      <button class="btn" id="exportBtn">Export JSON</button>
+      <button class="btn" id="importBtn">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden">
+      <button class="btn" id="printBtn">Print / PDF</button>
+      <button class="btn" id="uploadLocal" style="display:none">Upload my browser copy to the sheet</button>
+      <button class="btn danger" id="resetBtn">Reset to seed</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="legend">
+    <span class="l-chief">Chair / Chief</span>
+    <span class="l-rep">Quality representative / M&amp;M leader</span>
+    <span class="l-sec">Section chief / site chief</span>
+    <span class="l-fac">Faculty</span>
+  </div>
+
+  <div class="tier" id="chairTier"></div>
+  <div class="connector"></div>
+  <div class="tier" id="vcTier"></div>
+  <details class="vice-row" id="viceRow">
+    <summary>Other vice chairs</summary>
+    <div class="vice-grid" id="viceGrid"></div>
+  </details>
+  <div class="connector"></div>
+  <div class="connector wide"></div>
+  <div class="divisions" id="divisions"></div>
+</main>
+
+<footer>
+  Seeded from surgery.ucsf.edu/our-people on Sep 23, 2026. Titles are as listed there; verify before circulating. Quality representative slots are left open unless a quality title appeared on the faculty page. The roster is stored in a shared Google Sheet; every editor sees the same data.
+</footer>
+
+<dialog id="dlg"><form method="dialog" class="modal" id="form">
+  <h3 id="dlgTitle">Edit person</h3>
+  <div class="field hidden" id="fPickWrap"><label for="fPick">Choose from this division's roster</label>
+    <select id="fPick"><option value="">Someone not on the roster (enter below)</option></select></div>
+  <div class="field"><label for="fName">Name and credentials</label><input id="fName" required></div>
+  <div class="field"><label for="fTitle">Title (one per line)</label><textarea id="fTitle"></textarea></div>
+  <div class="field"><label for="fRole">Role in chart</label>
+    <select id="fRole">
+      <option value="chief">Chief</option>
+      <option value="section-chief">Section chief / site chief</option>
+      <option value="faculty">Faculty</option>
+      <option value="staff">Staff</option>
+    </select></div>
+  <div class="field" id="fQWrap"><label>Quality role</label>
+    <div class="checks"><label><input type="checkbox" id="fQRep"> Quality representative</label><label><input type="checkbox" id="fQMM"> M&amp;M leader</label></div></div>
+  <div class="field" id="fDivWrap"><label for="fDiv">Division</label><select id="fDiv"></select></div>
+  <div class="field"><label for="fNotes">Quality notes (e.g. NSQIP, MBSAQIP, M&amp;M lead)</label><input id="fNotes"></div>
+  <div class="modal-actions">
+    <button type="button" class="btn danger" id="fDelete">Delete person</button>
+    <div class="right"><button type="button" class="btn" id="fCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
+  </div>
+</form></dialog>
+
+<dialog id="dlgDiv"><form method="dialog" class="modal" id="formDiv">
+  <h3 id="dlgDivTitle">Division</h3>
+  <div class="field"><label for="dName">Division name</label><input id="dName" required></div>
+  <div class="modal-actions">
+    <button type="button" class="btn danger" id="dDelete">Delete division</button>
+    <div class="right"><button type="button" class="btn" id="dCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
+  </div>
+</form></dialog>
+
+<script>
+const P=(name,title,role='faculty',notes='')=>({id:uid(),name,title,role,notes});
+function uid(){return Math.random().toString(36).slice(2,10)}
+
+function seed(){ return {
+  chair: P('Julie Ann Sosa, MD, MA, FACS, MAMSE, FSSO','Chair, Department of Surgery\nLeon Goldman, MD Distinguished Professor of Surgery','chief'),
+  qualityChair: P('Elizabeth C. Wick, MD','Vice Chair of Quality and Safety\nProfessor of Surgery, Division of Surgical Oncology','quality-rep'),
+  support: [
+    P('Brad','Quality Improvement Nurse Supervisor\nDepartment of Adult Quality and Patient Safety, funded through Surgery','staff','Co-lead, Surgery QI and Peer Review Committee'),
+    P('Healthcare Quality Analyst','NSQIP / MBSAQIP data abstraction','staff'),
+    P('Healthcare Quality Analyst','NSQIP / MBSAQIP data abstraction','staff')
+  ],
+  viceChairs: [
+    P('Andre Campbell, MD, FACS','Vice Chair of Opportunity and Outreach','faculty'),
+    P('Joseph Cuschieri, MD, FACS','Vice Chair of Acute Care Surgery\nChief of Surgery, ZSFG','faculty'),
+    P('Sandy Feng, MD, PhD','Vice Chair for Research','faculty'),
+    P('Emily Finlayson, MD, MS, FACS','Vice Chair for Faculty Affairs and Development','faculty'),
+    P('Jade S. Hiramoto, MD','Vice Chair of Clinical Affairs','faculty'),
+    P('Matthew Y.C. Lin, MD','Interim Vice Chair for Education','faculty'),
+    P('Peter G. Stock, MD, PhD','Vice Chair for Professionalism','faculty')
+  ],
+  divisions: [
+    {id:uid(),name:'General Surgery',members:[
+      P('Stanley J. Rogers, MD','Interim Division Chief\nDirector, Bariatric Surgery Center and Minimally Invasive Surgery','chief'),
+      P('Ian S. Soriano, MD, FACS','Surgeon Champion, ACS NSQIP, Parnassus\nDirector of Robotic Surgery','quality-rep','NSQIP surgeon champion'),
+      P('Rochelle A. Dicker, MD','Section Chief, Acute Care Surgery\nCo-Director, Surgical ICUs, UCSF Health','section-chief'),
+      P('Lara Senekjian, MD','Associate Section Chief, Acute Care Surgery','section-chief'),
+      P('Joseph Cuschieri, MD, FACS','Chief of Surgery, Zuckerberg San Francisco General','section-chief'),
+      P('Lygia Stewart, MD','Chief, General Surgery Section, San Francisco VA','section-chief'),
+      P('Marissa A. Boeck, MD, MPH','Trauma and Surgical Critical Care, ZSFG'),
+      P('Tasce Bongiovanni, MD, MPP, MHS','Acute Care and Trauma Surgery, ZSFG'),
+      P('Andre Campbell, MD, FACS','Trauma and Surgical Critical Care, ZSFG'),
+      P('Jonathan Carter, MD','Bariatric and GI Surgery\nProgram Director, MIS/Bariatric Fellowship'),
+      P('Tammy T. Chang, MD, PhD','Professor of Surgery'),
+      P('Kent Garber, MD, MPH','Assistant Professor of Surgery'),
+      P('Hobart W. Harris, MD, MPH','Director, Center for Hernia Repair'),
+      P('Rachel Koch, MD','Assistant Professor of Surgery'),
+      P('Lucy Kornblith, MD, FACS','Trauma and Surgical Critical Care, ZSFG\nDirector of Research, ZSFG'),
+      P('Sandhya Kumar, MD','Associate Professor of Surgery'),
+      P('Carter Lebares, MD','Director, Center for Mindfulness in Surgery'),
+      P('Matthew Y.C. Lin, MD','Director, Surgery Clerkship Program'),
+      P('Rebecca Plevin, MD','Trauma and Surgical Critical Care, ZSFG'),
+      P('Amanda Sammann, MD, MPH','Trauma and Surgical Critical Care, ZSFG'),
+      P('Nichole Starr, MD, MPH','Trauma and Surgical Critical Care, ZSFG'),
+      P('Ronald B. Tesoriero, MD','Director, Acute Care Surgery Fellowship\nCo-Director, SICU, ZSFG')
+    ]},
+    {id:uid(),name:'Surgical Oncology',members:[
+      P('Ajay V. Maker, MD, FACS, FSSO','Chief, Division of Surgical Oncology','chief'),
+      P('Laura J. Esserman, MD, MBA','Chief, Section of Breast Care Surgery\nDirector, UCSF Breast Care Center','section-chief'),
+      P('Michael D. Alvarado, MD','Interim Chief, Section of Breast Care Surgery (as listed)\nDirector, Breast Surgery Oncology Fellowship','section-chief'),
+      P('Madhulika Varma, MD','Chief, Section of Colorectal Surgery','section-chief'),
+      P('Quan-Yang Duh, MD','Chief, Section of Endocrine Surgery','section-chief'),
+      P('Carlos U. Corvera, MD, FACS','Chief, Section of HPB-GISS','section-chief'),
+      P('Mohamed Abdelgadir Adam, MD','Director, Robotic HPB Surgery'),
+      P('Adnan Alseidi, MD, EdM, MBA','Associate Dean of Assessment, Improvement and Accreditation'),
+      P('Kimberly Badal, PhD','Assistant Professor of Surgery'),
+      P('Amrita Basu, PhD','Associate Professor of Surgery'),
+      P('Michael J. Campbell, PhD','Professor of Surgery'),
+      P('Julia Chandler, MD, MS','Assistant Professor of Surgery'),
+      P('Hueylan Chern, MD','Director, Surgical Skills Center'),
+      P('Cheryl A. Ewing, MD','Professor of Surgery'),
+      P('Emily Finlayson, MD, MS, FACS','Director, Center for Surgery in Older Adults'),
+      P('Jessica Gosnell, MD','Director, Surgery Clerkship Program'),
+      P('Kenzo Hirose, MD','Director, General Surgery Residency Program'),
+      P('Gillian L. Hirst, PhD','Administrative Director, T32 Surgical Oncology'),
+      P('Ivy Huang, MD, MEHP','Section of Colorectal Surgery'),
+      P('Jordan Jackson, MD','Assistant Professor of Surgery'),
+      P('Edward Kim, MD','Professor of Surgery'),
+      P('Kimberly Kirkwood, MD','Professor of Surgery'),
+      P('James Koh, PhD','Director, Endocrine Neoplasia Research Lab'),
+      P('Rita Mukhtar, MD','Lobular Breast Cancer Research Program'),
+      P('Michelle B. Mulder, MD','Section of Endocrine Surgery\nProgram Director, Endocrine Surgery Fellowship'),
+      P('Eric Nakakura, MD, PhD','Medical Director, Mission Bay A5/A6 and UBLT'),
+      P('June Peng, MD','Section of HPB-GISS'),
+      P('Guilin Qiao, PhD','Associate Professor of Surgery'),
+      P('Sanziana A. Roman, MD, FACS','Section of Endocrine Surgery'),
+      P('Robert S. Warren, MD','Warren Lab in Surgical Oncology'),
+      P('Valerie M. Weaver, PhD','Director, Center for Bioengineering and Tissue Regeneration'),
+      P('Jasmine M. Wong, MD','Assistant Program Director for Surgical Interns'),
+      P('Christina Yau, PhD','Professor of Surgery'),
+      P('B. Mark Zhao, MD','Section of Colorectal Surgery')
+    ]},
+    {id:uid(),name:'Cardiac Surgery and Lung Transplantation',members:[
+      P('Jason W. Smith, MD, FACS','Division Chief\nCo-Director, Heart and Vascular Center','chief'),
+      P('Amy G. Fiedler, MD','Medical Director of Quality and Safety, Heart and Vascular Center\nDirector, Heart Transplantation and MCS','quality-rep','HVC quality lead'),
+      P('Elaine Tseng, MD, FACS, FAHA','Chief of Cardiac Surgery, San Francisco VA','section-chief'),
+      P('Ramin E. Beygui, MD, MSc, FACS','Medical Director, CT Surgery, Washington Hospital'),
+      P('Marko T. Boskovski, MD, MHS, MPH','Director, Ross and Aortic Valve Preserving Surgery'),
+      P('Bianca Bromberger, MD','Co-Director, CT Surgery ICU'),
+      P('Tobias Deuse, MD','Director, Minimally Invasive Cardiac Surgery'),
+      P('Arthur Hill, MD, FACS, FACC','Professor of Surgery'),
+      P('Jasleen Kukreja, MD, MPH','Director, Lung Transplantation Program'),
+      P('Teng C. Lee, MD, FACS','Co-Director, Center for Aortic Disease')
+    ]},
+    {id:uid(),name:'Thoracic Surgery',members:[
+      P('Johannes R. Kratz, MD','Chief, Division of Thoracic Surgery\nMedical Director of Robotic Surgery, UCSF Health','chief'),
+      P('Melissa H. Coleman, MD','Associate Program Director, Thoracic Surgery Residency'),
+      P('Michael Mann, MD','Professor of Surgery'),
+      P('Matt Skovgard, MD','Assistant Professor of Surgery')
+    ]},
+    {id:uid(),name:'Transplant Surgery',members:[
+      P('Chris E. Freise, MD, FACS','Chief, Division of Transplant Surgery','chief'),
+      P('Nancy L. Ascher, MD, PhD','Isis Distinguished Professor in Transplantation'),
+      P('Hillary Braun, MD, MAS','Assistant Professor of Surgery'),
+      P('Sandy Feng, MD, PhD','Vice Chair for Research'),
+      P('James M. Gardner, MD, PhD','Director, UCSF VITAL Core'),
+      P('Chris Hsiung, MD, PhD','Assistant Professor of Surgery'),
+      P('Sang-Mo Kang, MD','Surgical Director, Liver Transplantation, Benioff Children\'s'),
+      P('Hirotake Komatsu, MD, PhD','Associate Professor of Surgery'),
+      P('Rajalingam Raja, PhD','Director, Immunogenetics and Transplantation Laboratory'),
+      P('Charles Rickert, MD, PhD','Assistant Professor of Surgery'),
+      P('John P. Roberts, MD','Endowed Chair in Abdominal Transplantation'),
+      P('Garrett R. Roll, MD','Professor of Surgery'),
+      P('Minnie M. Sarwal, MD, PhD','Medical Director, Pancreas Kidney Transplant Program'),
+      P('Tara Sigdel, PhD','Associate Professor of Surgery'),
+      P('Peter G. Stock, MD, PhD','Surgical Director, Kidney and Pancreas Transplant Program'),
+      P('Shareef Syed, MBChB, FACS','Director, Abdominal Transplant Fellowship'),
+      P('Qizhi Tang, PhD','Director, Transplantation Research Laboratory'),
+      P('Joyce Trompeta, PhD, PNP','Living Donor Kidney Transplant Program'),
+      P('Holger Willenbring, MD, PhD','Director, Liver Center')
+    ]},
+    {id:uid(),name:'Vascular and Endovascular Surgery',members:[
+      P('Michael S. Conte, MD','Chief, Division of Vascular and Endovascular Surgery\nCo-Director, Heart and Vascular Center','chief'),
+      P('Warren J. Gasper, MD','Chief, Vascular Surgery Section, San Francisco VA\nDirector, Vascular Surgery Integrated Residency','section-chief'),
+      P('Allan Conway, MD','Associate Professor of Surgery (MarinHealth)'),
+      P('Tina Desai, MD, FACS','Associate Professor of Surgery (MarinHealth)'),
+      P('Charles M. Eichler, MD','Professor of Surgery'),
+      P('Clara Gomez-Sanchez, MD','Associate Program Director, Vascular Residency'),
+      P('Jade S. Hiramoto, MD','Vice Chair of Clinical Affairs'),
+      P('James C. Iannuzzi, MD, MPH, FACS','Associate Professor of Surgery'),
+      P('Neelima Katragunta, MD, FACS','Associate Professor of Surgery'),
+      P('Stephanie Lin, MD','Professor of Surgery (MarinHealth)'),
+      P('Ahmed A. Naiem, MD, RPVI, FRCSC','Assistant Professor of Surgery'),
+      P('Adam Oskowitz, MD, PhD','Staff Physician'),
+      P('Peter A. Schneider, MD','Professor of Surgery'),
+      P('Shant Vartanian, MD','Staff Physician'),
+      P('Alexander M. Reyzelman, DPM','Co-Director, Center for Limb Preservation (Podiatry)')
+    ]},
+    {id:uid(),name:'Pediatric Surgery',members:[
+      P('Hanmin Lee, MD','Chief, Division of Pediatric Surgery\nSurgeon in Chief, Benioff Children\'s Hospital SF','chief'),
+      P('Christopher R. Newton, MD, FACS, FAAP','Director, Trauma Care, Benioff Children\'s Oakland','section-chief'),
+      P('James Betts, MD','Benioff Children\'s Hospital Oakland'),
+      P('Sarah Cairo, MD, MPH','Assistant Professor of Surgery'),
+      P('Kyle Cromer, PhD','Associate Professor of Surgery'),
+      P('Gabriella Grisotti, MD','Assistant Professor of Surgery'),
+      P('Brittany Hasty, MD','Associate Director, Surgical Education and Simulation Fellowship'),
+      P('Olajire Idowu, MD','Benioff Children\'s Hospital Oakland'),
+      P('Aaron R. Jensen, MD, MEd','Associate Trauma Medical Director, Benioff Children\'s Oakland'),
+      P('Sunghoon Kim, MD','Benioff Children\'s Hospital Oakland'),
+      P('Tippi MacKenzie, MD','Director, Broad Center of Regeneration Medicine'),
+      P('Willieford Moses, MD','Associate Professor of Surgery'),
+      P('Amar Nijagal, MD','Surgical Director, Pediatric Liver Center'),
+      P('Doruk Ozgediz, MD, MSc','Director, Center for Global Surgery and Health Equity'),
+      P('Lan Vu, MD','Director, LIFE Program\nAssociate Director, Pediatric Surgery Fellowship')
+    ]},
+    {id:uid(),name:'Pediatric Cardiothoracic Surgery',members:[
+      P('V. Mohan Reddy, MD','Chief, Division of Pediatric Cardiothoracic Surgery','chief'),
+      P('Peter Kouretas, MD, PhD','Surgical Director, Pediatric Heart Transplantation'),
+      P('Vinod Sebastian, MBBS','Associate Professor of Surgery'),
+      P('Naveen Swami, MCh','Assistant Professor')
+    ]},
+    {id:uid(),name:'Plastic and Reconstructive Surgery',members:[
+      P('Scott L. Hansen, MD, FACS','Chief, Division of Plastic and Reconstructive Surgery\nProgram Director, Plastic Surgery Residency','chief'),
+      P('Robert Foster, MD','Chief, Plastic and Reconstructive Surgery (as listed)','section-chief'),
+      P('Pablo Leon, MD','Chief, Plastic and Reconstructive Surgery, San Francisco VA','section-chief'),
+      P('Chau Tai, MD','Division Chief, Plastic, Reconstructive and Hand Surgery, Benioff Children\'s Oakland','section-chief'),
+      P('Michael J. Terry, MD','Interim Chief of Plastic Surgery, ZSFG','section-chief'),
+      P('Aaron Berger, MD, PhD','Associate Professor of Surgery'),
+      P('William Y. Hoffman, MD','Professor of Surgery'),
+      P('Bao-Quynh Julian, MD','Assistant Professor of Surgery'),
+      P('Esther A. Kim, MD','Director, UCSF Gender Affirming Surgery'),
+      P('Seung Ah Lee, MD','Assistant Professor of Surgery'),
+      P('Alexander Y. Lin, MD, MBA, FACS','Director of Surgical Innovations'),
+      P('Merisa L. Piper, MD','Associate Program Director, Plastic Surgery Residency'),
+      P('Jason H. Pomerantz, MD','Program Director, Craniofacial Fellowship'),
+      P('John Rose, MD, MPH','Assistant Professor of Surgery'),
+      P('Gloria Sue, MD, MA','Assistant Professor of Surgery'),
+      P('David M. Young, MD','Professor of Surgery')
+    ]},
+    {id:uid(),name:'UCSF-East Bay Surgery Program',members:[
+      P('Gregory P. Victorino, MD','Chief, UCSF-East Bay Surgery Program\nChair, Department of Surgery, Alameda Health System','chief'),
+      P('Lucas Thornblade, MD, MPH','Surgical Oncology, East Bay')
+    ]}
+  ]
+};}
+
+let data=migrate(seed());
+// ===== Configuration: paste your Apps Script web app URL here (ends in /exec) =====
+const API_URL='';
+// ==================================================================================
+function migrate(d){ const fix=p=>{ if(!p)return p; if(!Array.isArray(p.q))p.q=[]; if(p.role==='quality-rep'){p.role='faculty'; if(!p.q.includes('rep'))p.q.push('rep');} return p; };
+  fix(d.chair); fix(d.qualityChair); (d.support=d.support||[]).forEach(fix); (d.viceChairs=d.viceChairs||[]).forEach(fix); d.divisions.forEach(v=>(v.members=v.members||[]).forEach(fix)); return d; }
+const LOCAL_KEY='ucsf-surgery-quality-org-v1', PASS_KEY='ucsf-surgery-quality-org-pass';
+let writing=Promise.resolve(), pendingRender=false, lastServer='', polling=null;
+function loadLocal(){ try{const s=localStorage.getItem(LOCAL_KEY); if(s){const d=JSON.parse(s); if(d&&d.divisions) return migrate(d);} }catch(e){} return null; }
+function saveLocal(){ try{ localStorage.setItem(LOCAL_KEY,JSON.stringify(data)); }catch(e){} }
+function getPass(){ let p=''; try{ p=localStorage.getItem(PASS_KEY)||''; }catch(e){} if(!p){ p=window.prompt('Enter the shared edit passphrase for this chart:')||''; if(p){ try{ localStorage.setItem(PASS_KEY,p); }catch(e){} } } return p; }
+function save(){
+  saveLocal();
+  if(!API_URL){ flash('Saved in this browser only'); return; }
+  const body=JSON.stringify({passphrase:getPass(),data});
+  writing=writing.then(()=>fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body}))
+    .then(r=>r.json()).then(r=>{ if(r.ok){ lastServer=JSON.stringify(data); flash('Saved to the shared sheet'); }
+      else { if(/passphrase/i.test(r.error||'')){ try{ localStorage.removeItem(PASS_KEY); }catch(e){} } flash('Save rejected: '+(r.error||'unknown')); } })
+    .catch(()=>flash('Save failed, check connection'));
+}
+async function fetchServer(){ const r=await fetch(API_URL+(API_URL.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'}); if(!r.ok)throw new Error(r.status); return r.json(); }
+async function connect(){
+  const sub=document.getElementById('subtitle');
+  if(!API_URL){ const local=loadLocal(); if(local)data=local; sub.textContent='UCSF Health. Click any name to edit. No shared sheet configured; changes save in this browser only.'; render(); return; }
+  try{
+    const d=await fetchServer();
+    if(d&&d.divisions){ data=migrate(d); lastServer=JSON.stringify(data); }
+    else { const local=loadLocal(); data=local||migrate(seed()); }
+    sub.textContent='UCSF Health. Click any name to edit. Changes save to the shared Google Sheet and appear for every editor.';
+    if(loadLocal()&&JSON.stringify(loadLocal())!==lastServer)uploadLocal.style.display='';
+    render();
+    polling=setInterval(async()=>{ try{ const d=await fetchServer(); const s=JSON.stringify(migrate(d)); if(s!==lastServer&&s!==JSON.stringify(data)){ lastServer=s; data=JSON.parse(s); if(dlg.open||dlgDiv.open)pendingRender=true; else { render(); flash('Updated from shared sheet'); } } }catch(e){} },30000);
+  }catch(e){
+    const local=loadLocal(); if(local)data=local;
+    sub.textContent='UCSF Health. Could not reach the shared sheet; showing the last copy saved in this browser. Reload to retry.'; render();
+  }
+}
+uploadLocal.onclick=()=>arm(uploadLocal,'Click again to overwrite the sheet with my browser copy',()=>{
+  const local=loadLocal(); if(!local){ flash('No browser copy found'); return; }
+  data=local; save(); render(); uploadLocal.style.display='none';
+});
+document.getElementById('dlg').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
+document.getElementById('dlgDiv').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
+function flash(t){ const s=document.getElementById('status'); s.textContent=t; clearTimeout(flash.t); flash.t=setTimeout(()=>s.textContent='',1800); }
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ROLE_ORDER={chief:0,'section-chief':1,faculty:2,staff:3};
+const openState={};
+
+function personHTML(p,ctx){
+  const q=p.q||[]; const tags=(ctx!=='qualityChair'&&q.length)?`<div class="tags">${q.includes('rep')?'<span class="tag">Quality rep</span>':''}${q.includes('mm')?'<span class="tag mm">M&amp;M leader</span>':''}</div>`:'';
+  return `<div class="person ${p.role}${q.length?' has-q':''}" data-ctx="${ctx}" data-id="${p.id}" tabindex="0">
+    <span class="role-dot"></span>
+    <div class="who"><div class="name">${esc(p.name)}</div>${tags}
+      ${p.title?`<div class="title">${esc(p.title)}</div>`:''}
+      ${p.notes?`<div class="notes">${esc(p.notes)}</div>`:''}</div>
+    <div class="act"><button class="icon" data-edit title="Edit">&#9998;</button></div>
+  </div>`;
+}
+
+function render(){
+  document.getElementById('chairTier').innerHTML=`<div class="card lead">${personHTML(data.chair,'chair')}</div>`;
+  document.getElementById('vcTier').innerHTML=
+    `<div class="card lead rep">${personHTML(data.qualityChair,'qualityChair')}</div>
+     <div class="card support"><div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">Department quality support</div>
+       ${data.support.map(p=>personHTML(p,'support')).join('')}
+       <button class="btn sm" data-add="support" style="margin-top:6px">Add staff</button></div>`;
+  document.getElementById('viceGrid').innerHTML=data.viceChairs.map(p=>`<div class="card">${personHTML(p,'viceChairs')}</div>`).join('')
+    +`<div class="card" style="display:flex;align-items:center"><button class="btn sm" data-add="viceChairs">Add vice chair</button></div>`;
+
+  document.getElementById('divisions').innerHTML=data.divisions.map(d=>{
+    const m=[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name));
+    const hasQ=x=>(x.q||[]).length>0;
+    const chiefs=m.filter(x=>x.role==='chief'), reps=m.filter(hasQ),
+          secs=m.filter(x=>x.role==='section-chief'), rest=m.filter(x=>(x.role==='faculty'||x.role==='staff')&&!hasQ(x));
+    const open=openState[d.id]?' open':'';
+    return `<section class="card div-card" data-div="${d.id}">
+      <div class="div-head"><h2>${esc(d.name)}<span class="count">${d.members.length} people</span></h2>
+        <button class="icon" data-editdiv="${d.id}" title="Rename or delete division">&#9998;</button></div>
+      <div class="div-body">
+        ${chiefs.map(p=>personHTML(p,d.id)).join('')||`<div class="person"><span class="role-dot"></span><div class="who"><div class="title">No chief listed</div></div></div>`}
+        <div class="band"><div class="band-label">Quality representatives and M&amp;M leaders</div>
+          ${reps.length?reps.map(p=>personHTML(p,d.id)).join(''):`<div class="empty">Not yet assigned</div>`}
+          <button class="btn sm" data-add="${d.id}" data-role="quality-rep" style="margin-top:4px">${reps.length?'Add another':'Assign'}</button>
+        </div>
+        ${secs.map(p=>personHTML(p,d.id)).join('')}
+        <details class="roster" data-roster="${d.id}"${open}><summary><span>Faculty roster (${rest.length})</span><span class="chev"></span></summary>
+          ${rest.map(p=>personHTML(p,d.id)).join('')||'<div class="title" style="color:var(--muted);font-size:13px">No faculty listed</div>'}
+        </details>
+      </div>
+      <div class="div-foot"><button class="btn sm" data-add="${d.id}" data-role="faculty">Add person</button></div>
+    </section>`;
+  }).join('');
+  applySearch();
+}
+
+/* lookup helpers */
+function findList(ctx){ if(ctx==='support')return data.support; if(ctx==='viceChairs')return data.viceChairs; const d=data.divisions.find(x=>x.id===ctx); return d?d.members:null; }
+function getPerson(ctx,id){ if(ctx==='chair')return data.chair; if(ctx==='qualityChair')return data.qualityChair; return (findList(ctx)||[]).find(p=>p.id===id); }
+
+/* edit modal */
+const dlg=document.getElementById('dlg'); let editing=null;
+function openEdit(ctx,id,role){
+  const isNew=!id; const p=isNew?P('','',role||'faculty'):getPerson(ctx,id);
+  editing={ctx,id,isNew,p};
+  document.getElementById('dlgTitle').textContent=isNew?'Add person':'Edit person';
+  fName.value=p.name; fTitle.value=p.title||''; fRole.value=p.role==='quality-rep'?'faculty':p.role; fNotes.value=p.notes||'';
+  fQRep.checked=(p.q||[]).includes('rep'); fQMM.checked=(p.q||[]).includes('mm');
+  fQWrap.classList.toggle('hidden',ctx==='chair'||ctx==='qualityChair');
+  const inDiv=!!data.divisions.find(d=>d.id===ctx);
+  fDivWrap.classList.toggle('hidden',!inDiv);
+  if(inDiv){ fDiv.innerHTML=data.divisions.map(d=>`<option value="${d.id}"${d.id===ctx?' selected':''}>${esc(d.name)}</option>`).join(''); }
+  fRole.disabled=(ctx==='chair'||ctx==='qualityChair');
+  fDelete.classList.toggle('hidden',isNew||ctx==='chair'||ctx==='qualityChair');
+  const showPick=isNew&&inDiv&&role==='quality-rep';
+  fPickWrap.classList.toggle('hidden',!showPick);
+  if(showPick){
+    document.getElementById('dlgTitle').textContent='Assign quality representative';
+    const roster=findList(ctx).filter(p=>!(p.q||[]).length).sort((a,b)=>a.name.localeCompare(b.name));
+    fPick.innerHTML='<option value="">Someone not on the roster (enter below)</option>'+roster.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    fPick.value=''; fName.required=true; fQRep.checked=true; fQMM.checked=false;
+  }
+  disarm(fDelete); dlg.showModal(); (showPick?fPick:fName).focus();
+}
+fPick.onchange=()=>{
+  const p=fPick.value?getPerson(editing.ctx,fPick.value):null;
+  if(p){ fName.value=p.name; fTitle.value=p.title||''; fName.required=false; }
+  else { fName.value=''; fTitle.value=''; fName.required=true; }
+};
+document.getElementById('form').addEventListener('submit',e=>{
+  e.preventDefault(); const {ctx,isNew,p}=editing;
+  if(isNew&&!fPickWrap.classList.contains('hidden')&&fPick.value){
+    const existing=getPerson(ctx,fPick.value);
+    existing.q=readQ(); existing.notes=fNotes.value.trim();
+    if(fTitle.value.trim())existing.title=fTitle.value.trim();
+    dlg.close(); save(); render(); return;
+  }
+  p.name=fName.value.trim(); p.title=fTitle.value.trim(); p.notes=fNotes.value.trim(); if(!fRole.disabled){p.role=fRole.value; p.q=readQ();}
+  const inDiv=!!data.divisions.find(d=>d.id===ctx);
+  if(isNew){ (findList(inDiv?fDiv.value:ctx)||[]).push(p); if(inDiv)openState[fDiv.value]=true; }
+  else if(inDiv&&fDiv.value!==ctx){ const from=findList(ctx),i=from.indexOf(p); from.splice(i,1); findList(fDiv.value).push(p); openState[fDiv.value]=true; }
+  dlg.close(); save(); render();
+});
+function arm(btn,label,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.classList.remove('arm'); btn.textContent=btn.dataset.label; fn(); return; } btn.dataset.label=btn.textContent; btn.dataset.armed='1'; btn.classList.add('arm'); btn.textContent=label; clearTimeout(btn._t); btn._t=setTimeout(()=>{delete btn.dataset.armed; btn.classList.remove('arm'); btn.textContent=btn.dataset.label;},4000); }
+function disarm(btn){ delete btn.dataset.armed; btn.classList.remove('arm'); if(btn.dataset.label)btn.textContent=btn.dataset.label; }
+function readQ(){ const q=[]; if(fQRep.checked)q.push('rep'); if(fQMM.checked)q.push('mm'); return q; }
+fCancel.onclick=()=>dlg.close();
+fDelete.onclick=()=>arm(fDelete,'Click again to delete',()=>{ const {ctx,p}=editing; const l=findList(ctx); const i=l.indexOf(p); if(i>-1)l.splice(i,1); dlg.close(); save(); render(); flash('Deleted'); });
+
+/* division modal */
+const dlgDiv=document.getElementById('dlgDiv'); let editingDiv=null;
+function openDiv(id){
+  editingDiv=id?data.divisions.find(d=>d.id===id):null;
+  dlgDivTitle.textContent=editingDiv?'Edit division':'Add division';
+  dName.value=editingDiv?editingDiv.name:''; dDelete.classList.toggle('hidden',!editingDiv);
+  disarm(dDelete); dlgDiv.showModal(); dName.focus();
+}
+document.getElementById('formDiv').addEventListener('submit',e=>{
+  e.preventDefault(); const n=dName.value.trim(); if(!n)return;
+  if(editingDiv)editingDiv.name=n; else data.divisions.push({id:uid(),name:n,members:[]});
+  dlgDiv.close(); save(); render();
+});
+dCancel.onclick=()=>dlgDiv.close();
+dDelete.onclick=()=>arm(dDelete,`Click again to delete ${editingDiv.members.length} people`,()=>{ data.divisions=data.divisions.filter(d=>d!==editingDiv); dlgDiv.close(); save(); render(); flash('Division deleted'); });
+
+/* delegation */
+document.addEventListener('click',e=>{
+  const add=e.target.closest('[data-add]'); if(add){ openEdit(add.dataset.add,null,add.dataset.role); return; }
+  const ed=e.target.closest('[data-editdiv]'); if(ed){ openDiv(ed.dataset.editdiv); return; }
+  const person=e.target.closest('.person[data-id]'); if(person&&!e.target.closest('summary')){ openEdit(person.dataset.ctx,person.dataset.id); }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('person')){ openEdit(e.target.dataset.ctx,e.target.dataset.id); } });
+document.addEventListener('toggle',e=>{ const r=e.target.dataset&&e.target.dataset.roster; if(r)openState[r]=e.target.open; },true);
+
+/* toolbar */
+addDiv.onclick=()=>openDiv(null);
+expandAll.onclick=()=>{data.divisions.forEach(d=>openState[d.id]=true);render();};
+collapseAll.onclick=()=>{data.divisions.forEach(d=>openState[d.id]=false);render();};
+printBtn.onclick=()=>{ data.divisions.forEach(d=>openState[d.id]=true); render(); setTimeout(()=>window.print(),150); };
+resetBtn.onclick=()=>arm(resetBtn,'Click again to reset the shared sheet for everyone',()=>{ data=migrate(seed()); save(); render(); flash('Reset'); });
+exportBtn.onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); a.download='ucsf-surgery-quality-org-chart.json'; a.click(); };
+importBtn.onclick=()=>importFile.click();
+importFile.onchange=()=>{ const f=importFile.files[0]; if(!f)return; f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d.divisions)throw 0; data=migrate(d); save(); render(); flash('Imported'); }catch(e){ flash('That file is not a chart export'); } }); importFile.value=''; };
+
+/* search */
+const q=document.getElementById('q'); q.addEventListener('input',applySearch);
+function applySearch(){
+  const t=q.value.trim().toLowerCase();
+  document.querySelectorAll('.match').forEach(m=>m.replaceWith(m.textContent));
+  document.querySelectorAll('.div-card').forEach(sec=>{
+    let hit=!t;
+    if(t){
+      const d=data.divisions.find(x=>x.id===sec.dataset.div);
+      const ids=new Set(d.members.filter(p=>(p.name+' '+p.title+' '+p.notes).toLowerCase().includes(t)).map(p=>p.id));
+      hit=ids.size>0||d.name.toLowerCase().includes(t);
+      sec.querySelectorAll('.person[data-id]').forEach(el=>{
+        const on=ids.has(el.dataset.id); el.classList.toggle('hidden',t&&!on&&!el.classList.contains('chief'));
+        if(on){ const n=el.querySelector('.name'); n.innerHTML=esc(n.textContent).replace(new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'ig'),m=>`<span class="match">${m}</span>`); }
+      });
+      const ros=sec.querySelector('.roster'); if(ros&&[...ros.querySelectorAll('.person')].some(el=>ids.has(el.dataset.id)))ros.open=true;
+    }
+    sec.classList.toggle('hidden',!hit);
+  });
+}
+
+render();
+connect();
+</script>
+</body>
+</html>
