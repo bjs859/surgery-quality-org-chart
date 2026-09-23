@@ -58,6 +58,9 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .connector{width:2px;height:22px;background:var(--line);margin:0 auto}
 .connector.wide{height:2px;width:min(92%,1100px);margin:0 auto}
 .connector.dotted{background:none;border-left:2px dotted var(--gold);height:26px}
+.hlink{align-self:center;width:44px;height:0;border-top:2px dotted var(--gold);flex:0 0 44px}
+@media (max-width:900px){.hlink{width:0;height:26px;flex:0 0 100%;border-top:0;border-left:2px dotted var(--gold);margin:0 auto;align-self:auto;width:0}}
+#vcTier{align-items:stretch;flex-wrap:wrap}
 .dotted-label{text-align:center;font-size:12px;color:var(--muted);margin:-4px 0 6px}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);position:relative}
@@ -166,8 +169,6 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
   <div class="tier" id="chairTier"></div>
   <div class="connector"></div>
   <div class="tier" id="vcTier"></div>
-  <div class="connector dotted"></div>
-  <div class="tier" id="supportTier"></div>
   <div class="dotted-label">Dotted line: reports to the Department of Adult Quality and Patient Safety; supports the Vice Chair of Quality and Safety</div>
   <details class="vice-row" id="viceRow">
     <summary>Other vice chairs</summary>
@@ -461,9 +462,8 @@ function personHTML(p,ctx){
 
 function render(){
   document.getElementById('chairTier').innerHTML=`<div class="card lead">${personHTML(data.chair,'chair')}</div>`;
-  document.getElementById('vcTier').innerHTML=`<div class="card lead rep">${personHTML(data.qualityChair,'qualityChair')}</div>`;
-  document.getElementById('supportTier').innerHTML=
-    `<div class="card support"><div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">Department quality support</div>
+  document.getElementById('vcTier').innerHTML=
+    `<div class="card lead rep">${personHTML(data.qualityChair,'qualityChair')}</div><div class="hlink" aria-hidden="true"></div><div class="card support"><div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">Department quality support</div>
        ${data.support.map(p=>personHTML(p,'support')).join('')}
        <button class="btn sm" data-add="support" style="margin-top:6px">Add staff</button></div>`;
   document.getElementById('viceGrid').innerHTML=data.viceChairs.map(p=>`<div class="card">${personHTML(p,'viceChairs')}</div>`).join('')
