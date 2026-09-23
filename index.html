@@ -397,7 +397,7 @@ function seed(){ return {
 
 let data=migrate(seed());
 // ===== Configuration: paste your Apps Script web app URL here (ends in /exec) =====
-const API_URL='';
+const API_URL='https://script.google.com/macros/s/AKfycbx69hSfzJEbtwiNmNHf54q0uSOwyrmDfZwAUgu5fGfyDuFieRYIhBRIRymZFq44gUJ1qg/exec';
 // ==================================================================================
 function migrate(d){ const fix=p=>{ if(!p)return p; if(!Array.isArray(p.q))p.q=[]; if(p.role==='quality-rep'){p.role='faculty'; if(!p.q.includes('rep'))p.q.push('rep');} return p; };
   fix(d.chair); fix(d.qualityChair); (d.support=d.support||[]).forEach(fix); (d.viceChairs=d.viceChairs||[]).forEach(fix); d.divisions.forEach(v=>(v.members=v.members||[]).forEach(fix)); return d; }
