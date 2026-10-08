@@ -493,7 +493,7 @@ function render(){
        <div class="dotted-label">Reports to the Department of Adult Quality and Patient Safety; supports the Vice Chair of Quality and Safety and the divisions.</div>
        <button class="btn sm" data-add="support" style="margin-top:8px">Add staff</button></div>`;
 
-  document.getElementById('divisions').innerHTML=data.divisions.map(d=>{
+  document.getElementById('divisions').innerHTML=orderedDivisions().map(d=>{
     const hasQ=x=>(x.q||[]).length>0; const qs=x=>x.q||[];
     const rank=x=>(qs(x).includes('dc')?0:qs(x).includes('sc')?1:2);
     const tagged=d.members.filter(hasQ).sort((a,b)=>rank(a)-rank(b)||qs(b).length-qs(a).length||a.name.localeCompare(b.name));
@@ -518,6 +518,7 @@ function render(){
 }
 
 /* lookup helpers */
+function orderedDivisions(){ const ped=d=>/pediatric/i.test(d.name)?1:0; return data.divisions.map((d,i)=>({d,i})).sort((a,b)=>ped(a.d)-ped(b.d)||a.i-b.i).map(x=>x.d); }
 function findList(ctx){ if(ctx==='support')return data.support; if(ctx==='viceChairs')return data.viceChairs; const d=data.divisions.find(x=>x.id===ctx); return d?d.members:null; }
 function getPerson(ctx,id){ if(ctx==='chair')return data.chair; if(ctx==='qualityChair')return data.qualityChair; return (findList(ctx)||[]).find(p=>p.id===id); }
 
@@ -630,7 +631,7 @@ excelBtn.onclick=async()=>{
   sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)','CPIC presenter(s)','AQI quality representative(s)']);
   sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','','','']);
   sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'','','']);
-  data.divisions.forEach(d=>{
+  orderedDivisions().forEach(d=>{
     const chief=d.members.filter(p=>q(p).includes('dc')).map(p=>p.name).join('\n');
     const reps=d.members.filter(p=>q(p).includes('rep')).map(p=>p.name).join('\n');
     const mm=d.members.filter(p=>q(p).includes('mm')).map(p=>p.name).join('\n');
@@ -646,7 +647,7 @@ excelBtn.onclick=async()=>{
   ros.addRow(['Department leadership',data.chair.name,data.chair.title,'Chair','','','','','',data.chair.notes||'']);
   ros.addRow(['Department leadership',data.qualityChair.name,data.qualityChair.title,'Vice Chair, Quality and Safety','','','','','',data.qualityChair.notes||'']);
   data.support.forEach(p=>ros.addRow(['Department quality support',p.name,p.title||'','Staff',q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',q(p).includes('dc')?'Yes':'',q(p).includes('sc')?'Yes':'',q(p).includes('cpic')?'Yes':'',p.notes||'']));
-  data.divisions.forEach(d=>[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name))
+  orderedDivisions().forEach(d=>[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name))
     .concat((d.aqi||[]).map(a=>({name:a.name,title:'',role:'aqi',notes:a.notes||'',q:[]})))
     .forEach(p=>ros.addRow([d.name,p.name,p.title||'',roleLabel[p.role]||p.role,q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',q(p).includes('dc')?'Yes':'',q(p).includes('sc')?'Yes':'',q(p).includes('cpic')?'Yes':'',p.notes||''])));
   style(ros,[30,34,48,16,14,12,14,14,14,36]); ros.autoFilter={from:'A1',to:'J1'};
