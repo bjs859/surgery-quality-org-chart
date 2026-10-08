@@ -77,10 +77,10 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .person.quality-rep .role-dot{background:var(--teal)}
 .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
 .tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--teal);color:#fff}
-.tag.mm{background:var(--navy)}
-.tag.dc{background:var(--navy)}
-.tag.sc{background:var(--gold)}
-.tag.cpic{background:#6b4c9a}
+.tag.mm{background:var(--teal)}
+.tag.dc{background:var(--gold)}
+.tag.sc{background:var(--navy)}
+.tag.cpic{background:var(--teal)}
 .checks{flex-wrap:wrap;gap:10px 16px}
 .checks{display:flex;gap:16px;font-size:14px}
 .checks label{display:flex;align-items:center;gap:5px;font-weight:600;color:var(--text);font-size:14px;margin:0}
@@ -200,10 +200,10 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
       <option value="faculty">Faculty</option>
       <option value="staff">Staff</option>
     </select></div>
-  <div class="field" id="fQWrap"><label>Quality role</label>
+  <div class="field" id="fQWrap"><label>Role(s)</label>
     <div class="checks"><label><input type="checkbox" id="fQRep"> Quality representative</label><label><input type="checkbox" id="fQMM"> M&amp;M leader</label><label><input type="checkbox" id="fQDC"> Division Chief</label><label><input type="checkbox" id="fQSC"> Section Chief</label><label><input type="checkbox" id="fQCPIC"> CPIC Presenter</label></div></div>
   <div class="field" id="fDivWrap"><label for="fDiv">Division</label><select id="fDiv"></select></div>
-  <div class="field"><label for="fNotes">Quality notes (e.g. NSQIP, MBSAQIP, M&amp;M lead)</label><input id="fNotes"></div>
+  <div class="field"><label for="fNotes">Additional notes/roles</label><input id="fNotes"></div>
   <div class="modal-actions">
     <button type="button" class="btn danger" id="fDelete">Delete person</button>
     <div class="right"><button type="button" class="btn" id="fCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
@@ -482,7 +482,6 @@ function render(){
         <button class="icon" data-editdiv="${d.id}" title="Rename or delete division">&#9998;</button></div>
       <div class="div-body">
         ${tagged.map(p=>`<div class="${qs(p).includes('dc')?'is-dc':'is-tagged'}">${personHTML(p,d.id)}</div>`).join('')||`<div class="person"><span class="role-dot"></span><div class="who"><div class="title">No chief listed</div></div></div>`}
-        <button class="btn sm add-tagged" data-add="${d.id}" data-role="quality-rep" style="margin-top:4px">Add tagged person</button>
         <details class="roster" data-roster="${d.id}"${open}><summary><span>Other faculty (${rest.length})</span><span class="chev"></span></summary>
           ${rest.map(p=>personHTML(p,d.id)).join('')||'<div class="title" style="color:var(--muted);font-size:13px">No other faculty</div>'}
         </details>
