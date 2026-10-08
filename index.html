@@ -126,7 +126,15 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .roster summary::-webkit-details-marker{display:none}
 .roster summary .chev::before{content:"Show"}
 .roster[open] summary .chev::before{content:"Hide"}
-.div-foot{padding:6px 14px 12px;display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.div-foot{padding:6px 14px 12px;display:flex;gap:6px;flex-wrap:wrap}
+.aqi{margin-top:auto;border-top:1px dashed var(--line);padding:8px 14px 6px;background:var(--bg)}
+.aqi-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.aqi .person{padding:2px 0}
+.aqi .person .name{font-size:13.5px;font-weight:600}
+.aqi .person .title{font-size:12px}
+.aqi .empty{font-size:12.5px;color:var(--muted);font-style:italic}
+.aqi .btn{margin-top:4px}
+.divisions.condensed .aqi{display:none}
 .hidden{display:none !important}
 .match{background:rgba(198,146,20,.18);border-radius:2px}
 
@@ -209,6 +217,16 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
   <div class="modal-actions">
     <button type="button" class="btn danger" id="fDelete">Delete person</button>
     <div class="right"><button type="button" class="btn" id="fCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
+  </div>
+</form></dialog>
+
+<dialog id="dlgAqi"><form method="dialog" class="modal" id="formAqi">
+  <h3 id="dlgAqiTitle">AQI quality representative</h3>
+  <div class="field"><label for="aName">Name and credentials</label><input id="aName" required></div>
+  <div class="field"><label for="aNotes">Additional notes</label><textarea id="aNotes"></textarea></div>
+  <div class="modal-actions">
+    <button type="button" class="btn danger" id="aDelete">Delete</button>
+    <div class="right"><button type="button" class="btn" id="aCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
   </div>
 </form></dialog>
 
@@ -414,7 +432,7 @@ const API_URL='https://script.google.com/macros/s/AKfycbx69hSfzJEbtwiNmNHf54q0uS
 function migrate(d){ const fix=p=>{ if(!p)return p; if(!Array.isArray(p.q))p.q=[]; if(p.role==='quality-rep'){p.role='faculty'; if(!p.q.includes('rep'))p.q.push('rep');}
     if(p.q.includes('dsc')){ p.q=p.q.filter(t=>t!=='dsc'); p.q.push(p.role==='section-chief'?'sc':'dc'); }
     if(p.role==='chief'&&!p.q.includes('dc'))p.q.push('dc'); if(p.role==='section-chief'&&!p.q.includes('sc'))p.q.push('sc'); return p; };
-  fix(d.chair); d.chair.q=(d.chair.q||[]).filter(t=>t!=='dc'); fix(d.qualityChair); (d.support=d.support||[]).forEach(fix); (d.viceChairs=d.viceChairs||[]).forEach(fix); d.divisions.forEach(v=>(v.members=v.members||[]).forEach(fix)); return d; }
+  fix(d.chair); d.chair.q=(d.chair.q||[]).filter(t=>t!=='dc'); fix(d.qualityChair); (d.support=d.support||[]).forEach(fix); (d.viceChairs=d.viceChairs||[]).forEach(fix); d.divisions.forEach(v=>{ (v.members=v.members||[]).forEach(fix); v.aqi=Array.isArray(v.aqi)?v.aqi:[]; }); return d; }
 const LOCAL_KEY='ucsf-surgery-quality-org-v1', PASS_KEY='ucsf-surgery-quality-org-pass';
 let writing=Promise.resolve(), pendingRender=false, lastServer='', polling=null;
 function loadLocal(){ try{const s=localStorage.getItem(LOCAL_KEY); if(s){const d=JSON.parse(s); if(d&&d.divisions) return migrate(d);} }catch(e){} return null; }
@@ -439,7 +457,7 @@ async function connect(){
     else { const local=loadLocal(); data=local||migrate(seed()); }
     sub.textContent='UCSF Health. Click any name to edit. Changes save to the shared Google Sheet and appear for every editor.';
     render();
-    polling=setInterval(async()=>{ try{ const d=await fetchServer(); const s=JSON.stringify(migrate(d)); if(s!==lastServer&&s!==JSON.stringify(data)){ lastServer=s; data=JSON.parse(s); if(dlg.open||dlgDiv.open)pendingRender=true; else { render(); flash('Updated from shared sheet'); } } }catch(e){} },30000);
+    polling=setInterval(async()=>{ try{ const d=await fetchServer(); const s=JSON.stringify(migrate(d)); if(s!==lastServer&&s!==JSON.stringify(data)){ lastServer=s; data=JSON.parse(s); if(dlg.open||dlgDiv.open||dlgAqi.open)pendingRender=true; else { render(); flash('Updated from shared sheet'); } } }catch(e){} },30000);
   }catch(e){
     const local=loadLocal(); if(local)data=local;
     sub.textContent='UCSF Health. Could not reach the shared sheet; showing the last copy saved in this browser. Reload to retry.'; render();
@@ -447,6 +465,7 @@ async function connect(){
 }
 document.getElementById('dlg').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
 document.getElementById('dlgDiv').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
+document.getElementById('dlgAqi').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
 function flash(t){ const s=document.getElementById('status'); s.textContent=t; clearTimeout(flash.t); flash.t=setTimeout(()=>s.textContent='',1800); }
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ROLE_ORDER={chief:0,'section-chief':1,faculty:2,staff:3};
@@ -490,6 +509,9 @@ function render(){
         </details>
       </div>
       <div class="div-foot"><button class="btn sm" data-add="${d.id}" data-role="faculty">Add person</button></div>
+      <div class="aqi"><div class="aqi-label">AQI quality representative${(d.aqi||[]).length>1?'s':''}</div>
+        ${(d.aqi||[]).map(a=>`<div class="person aqi-person" data-div="${d.id}" data-aqi="${a.id}" tabindex="0"><div class="who"><div class="name">${esc(a.name)}</div>${a.notes?`<div class="title">${esc(a.notes)}</div>`:''}</div><div class="act"><button class="icon" title="Edit">&#9998;</button></div></div>`).join('')||'<div class="empty">Not yet assigned</div>'}
+        <button class="btn sm" data-addaqi="${d.id}">Add AQI rep</button></div>
     </section>`;
   }).join('');
   applySearch();
@@ -549,6 +571,21 @@ fCancel.onclick=()=>dlg.close();
 fDelete.onclick=()=>arm(fDelete,'Click again to delete',()=>{ const {ctx,p}=editing; const l=findList(ctx); const i=l.indexOf(p); if(i>-1)l.splice(i,1); dlg.close(); save(); render(); flash('Deleted'); });
 
 /* division modal */
+const dlgAqi=document.getElementById('dlgAqi'); let editingAqi=null;
+function openAqi(divId,aqiId){
+  const d=data.divisions.find(x=>x.id===divId); if(!d)return; d.aqi=d.aqi||[];
+  const a=aqiId?d.aqi.find(x=>x.id===aqiId):null; editingAqi={d,a};
+  dlgAqiTitle.textContent=a?'Edit AQI quality representative':'Add AQI quality representative';
+  aName.value=a?a.name:''; aNotes.value=a?(a.notes||''):''; aDelete.classList.toggle('hidden',!a);
+  disarm(aDelete); dlgAqi.showModal(); aName.focus();
+}
+document.getElementById('formAqi').addEventListener('submit',e=>{
+  e.preventDefault(); const {d,a}=editingAqi; const n=aName.value.trim(); if(!n)return;
+  if(a){ a.name=n; a.notes=aNotes.value.trim(); } else d.aqi.push({id:uid(),name:n,notes:aNotes.value.trim()});
+  dlgAqi.close(); save(); render();
+});
+aCancel.onclick=()=>dlgAqi.close();
+aDelete.onclick=()=>arm(aDelete,'Click again to delete',()=>{ const {d,a}=editingAqi; d.aqi=d.aqi.filter(x=>x!==a); dlgAqi.close(); save(); render(); flash('Deleted'); });
 const dlgDiv=document.getElementById('dlgDiv'); let editingDiv=null;
 function openDiv(id){
   editingDiv=id?data.divisions.find(d=>d.id===id):null;
@@ -566,11 +603,13 @@ dDelete.onclick=()=>arm(dDelete,`Click again to delete ${editingDiv.members.leng
 
 /* delegation */
 document.addEventListener('click',e=>{
+  const addA=e.target.closest('[data-addaqi]'); if(addA){ openAqi(addA.dataset.addaqi,null); return; }
+  const ap=e.target.closest('.aqi-person'); if(ap){ openAqi(ap.dataset.div,ap.dataset.aqi); return; }
   const add=e.target.closest('[data-add]'); if(add){ openEdit(add.dataset.add,null,add.dataset.role); return; }
   const ed=e.target.closest('[data-editdiv]'); if(ed){ openDiv(ed.dataset.editdiv); return; }
   const person=e.target.closest('.person[data-id]'); if(person&&!e.target.closest('summary')){ openEdit(person.dataset.ctx,person.dataset.id); }
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('person')){ openEdit(e.target.dataset.ctx,e.target.dataset.id); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.classList.contains('aqi-person')){ openAqi(e.target.dataset.div,e.target.dataset.aqi); return; } if(e.key==='Enter'&&e.target.classList.contains('person')){ openEdit(e.target.dataset.ctx,e.target.dataset.id); } });
 document.addEventListener('toggle',e=>{ const r=e.target.dataset&&e.target.dataset.roster; if(r)openState[r]=e.target.open; },true);
 
 /* toolbar */
@@ -588,25 +627,27 @@ excelBtn.onclick=async()=>{
     ws.eachRow(r=>{ r.alignment={wrapText:true,vertical:'top'}; r.eachCell(c=>{ c.border={bottom:{style:'thin',color:{argb:'FFD9DDE3'}}}; }); }); ws.views=[{state:'frozen',ySplit:1}]; };
   const q=p=>p.q||[]; const first=t=>(t||'').split('\n')[0];
   const sum=wb.addWorksheet('Summary');
-  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)','CPIC presenter(s)']);
-  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','','']);
-  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'','']);
+  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)','CPIC presenter(s)','AQI quality representative(s)']);
+  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','','','']);
+  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'','','']);
   data.divisions.forEach(d=>{
     const chief=d.members.filter(p=>q(p).includes('dc')).map(p=>p.name).join('\n');
     const reps=d.members.filter(p=>q(p).includes('rep')).map(p=>p.name).join('\n');
     const mm=d.members.filter(p=>q(p).includes('mm')).map(p=>p.name).join('\n');
     const cp=d.members.filter(p=>q(p).includes('cpic')).map(p=>p.name).join('\n');
-    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned',cp||'']);
+    const aq=(d.aqi||[]).map(a=>a.name).join('\n');
+    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned',cp||'',aq||'']);
   });
-  style(sum,[32,36,36,36,36]);
+  style(sum,[30,32,32,32,32,32]);
   sum.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
   const ros=wb.addWorksheet('Roster');
   ros.addRow(['Division','Name','Title','Chart role','Quality representative','M&M leader','Division Chief','Section Chief','CPIC Presenter','Notes']);
-  const roleLabel={chief:'Chief','section-chief':'Section chief',faculty:'Faculty',staff:'Staff','quality-rep':'Faculty'};
+  const roleLabel={chief:'Chief','section-chief':'Section chief',faculty:'Faculty',staff:'Staff','quality-rep':'Faculty',aqi:'AQI quality representative'};
   ros.addRow(['Department leadership',data.chair.name,data.chair.title,'Chair','','','','','',data.chair.notes||'']);
   ros.addRow(['Department leadership',data.qualityChair.name,data.qualityChair.title,'Vice Chair, Quality and Safety','','','','','',data.qualityChair.notes||'']);
   data.support.forEach(p=>ros.addRow(['Department quality support',p.name,p.title||'','Staff',q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',q(p).includes('dc')?'Yes':'',q(p).includes('sc')?'Yes':'',q(p).includes('cpic')?'Yes':'',p.notes||'']));
   data.divisions.forEach(d=>[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name))
+    .concat((d.aqi||[]).map(a=>({name:a.name,title:'',role:'aqi',notes:a.notes||'',q:[]})))
     .forEach(p=>ros.addRow([d.name,p.name,p.title||'',roleLabel[p.role]||p.role,q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',q(p).includes('dc')?'Yes':'',q(p).includes('sc')?'Yes':'',q(p).includes('cpic')?'Yes':'',p.notes||''])));
   style(ros,[30,34,48,16,14,12,14,14,14,36]); ros.autoFilter={from:'A1',to:'J1'};
   const buf=await wb.xlsx.writeBuffer();
