@@ -451,7 +451,10 @@ const ROLE_ORDER={chief:0,'section-chief':1,faculty:2,staff:3};
 const openState={};
 
 function personHTML(p,ctx){
-  const q=p.q||[]; const tags=(ctx!=='qualityChair'&&q.length)?`<div class="tags">${q.includes('rep')?'<span class="tag">Quality rep</span>':''}${q.includes('mm')?'<span class="tag mm">M&amp;M leader</span>':''}${q.includes('dc')?'<span class="tag dc">Division Chief</span>':''}${q.includes('sc')?'<span class="tag sc">Section Chief</span>':''}${q.includes('cpic')?'<span class="tag cpic">CPIC Presenter</span>':''}</div>`:'';
+  const q=p.q||[];
+  const chiefTags=(q.includes('dc')?'<span class="tag dc">Division Chief</span>':'')+(q.includes('sc')?'<span class="tag sc">Section Chief</span>':'');
+  const otherTags=(q.includes('rep')?'<span class="tag">Quality rep</span>':'')+(q.includes('mm')?'<span class="tag mm">M&amp;M leader</span>':'')+(q.includes('cpic')?'<span class="tag cpic">CPIC Presenter</span>':'');
+  const tags=(ctx!=='qualityChair'&&q.length)?(chiefTags?`<div class="tags">${chiefTags}</div>`:'')+(otherTags?`<div class="tags">${otherTags}</div>`:''):'';
   return `<div class="person ${p.role}${q.length?' has-q':''}" data-ctx="${ctx}" data-id="${p.id}" tabindex="0">
     <span class="role-dot"></span>
     <div class="who"><div class="name">${esc(p.name)}</div>${tags}
