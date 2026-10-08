@@ -78,6 +78,9 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
 .tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--teal);color:#fff}
 .tag.mm{background:var(--navy)}
+.tag.dsc{background:var(--gold)}
+.tag.cpic{background:#6b4c9a}
+.checks{flex-wrap:wrap;gap:10px 16px}
 .checks{display:flex;gap:16px;font-size:14px}
 .checks label{display:flex;align-items:center;gap:5px;font-weight:600;color:var(--text);font-size:14px;margin:0}
 .person .who{flex:1;min-width:0}
@@ -149,7 +152,7 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
 <body>
 <header>
   <div class="hd-row">
-    <h1>Department of Surgery Divisional Quality Structure
+    <h1>Department of Surgery quality representatives
       <small id="subtitle">UCSF Health. Click any name to edit. Connecting to the shared sheet.</small></h1>
     <div class="tools">
       <input type="search" id="q" placeholder="Find a person or division" aria-label="Search">
@@ -197,7 +200,7 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
       <option value="staff">Staff</option>
     </select></div>
   <div class="field" id="fQWrap"><label>Quality role</label>
-    <div class="checks"><label><input type="checkbox" id="fQRep"> Quality representative</label><label><input type="checkbox" id="fQMM"> M&amp;M leader</label></div></div>
+    <div class="checks"><label><input type="checkbox" id="fQRep"> Quality representative</label><label><input type="checkbox" id="fQMM"> M&amp;M leader</label><label><input type="checkbox" id="fQDSC"> Division/Section Chief</label><label><input type="checkbox" id="fQCPIC"> CPIC Presenter</label></div></div>
   <div class="field" id="fDivWrap"><label for="fDiv">Division</label><select id="fDiv"></select></div>
   <div class="field"><label for="fNotes">Quality notes (e.g. NSQIP, MBSAQIP, M&amp;M lead)</label><input id="fNotes"></div>
   <div class="modal-actions">
@@ -445,7 +448,7 @@ const ROLE_ORDER={chief:0,'section-chief':1,faculty:2,staff:3};
 const openState={};
 
 function personHTML(p,ctx){
-  const q=p.q||[]; const tags=(ctx!=='qualityChair'&&q.length)?`<div class="tags">${q.includes('rep')?'<span class="tag">Quality rep</span>':''}${q.includes('mm')?'<span class="tag mm">M&amp;M leader</span>':''}</div>`:'';
+  const q=p.q||[]; const tags=(ctx!=='qualityChair'&&q.length)?`<div class="tags">${q.includes('rep')?'<span class="tag">Quality rep</span>':''}${q.includes('mm')?'<span class="tag mm">M&amp;M leader</span>':''}${q.includes('dsc')?'<span class="tag dsc">Division/Section Chief</span>':''}${q.includes('cpic')?'<span class="tag cpic">CPIC Presenter</span>':''}</div>`:'';
   return `<div class="person ${p.role}${q.length?' has-q':''}" data-ctx="${ctx}" data-id="${p.id}" tabindex="0">
     <span class="role-dot"></span>
     <div class="who"><div class="name">${esc(p.name)}</div>${tags}
@@ -473,7 +476,7 @@ function render(){
         <button class="icon" data-editdiv="${d.id}" title="Rename or delete division">&#9998;</button></div>
       <div class="div-body">
         ${chiefs.map(p=>personHTML(p,d.id)).join('')||`<div class="person"><span class="role-dot"></span><div class="who"><div class="title">No chief listed</div></div></div>`}
-        <div class="band"><div class="band-label">Quality representatives and M&amp;M leaders</div>
+        <div class="band"><div class="band-label">Quality representatives, M&amp;M leaders and CPIC presenters</div>
           ${reps.length?reps.map(p=>personHTML(p,d.id)).join(''):`<div class="empty">Not yet assigned</div>`}
           <button class="btn sm" data-add="${d.id}" data-role="quality-rep" style="margin-top:4px">${reps.length?'Add another':'Assign'}</button>
         </div>
@@ -498,7 +501,7 @@ function openEdit(ctx,id,role){
   editing={ctx,id,isNew,p};
   document.getElementById('dlgTitle').textContent=isNew?'Add person':'Edit person';
   fName.value=p.name; fTitle.value=p.title||''; fRole.value=p.role==='quality-rep'?'faculty':p.role; fNotes.value=p.notes||'';
-  fQRep.checked=(p.q||[]).includes('rep'); fQMM.checked=(p.q||[]).includes('mm');
+  fQRep.checked=(p.q||[]).includes('rep'); fQMM.checked=(p.q||[]).includes('mm'); fQDSC.checked=(p.q||[]).includes('dsc'); fQCPIC.checked=(p.q||[]).includes('cpic');
   fQWrap.classList.toggle('hidden',ctx==='chair'||ctx==='qualityChair');
   const inDiv=!!data.divisions.find(d=>d.id===ctx);
   fDivWrap.classList.toggle('hidden',!inDiv);
@@ -511,7 +514,7 @@ function openEdit(ctx,id,role){
     document.getElementById('dlgTitle').textContent='Assign quality representative';
     const roster=findList(ctx).filter(p=>!(p.q||[]).length).sort((a,b)=>a.name.localeCompare(b.name));
     fPick.innerHTML='<option value="">Someone not on the roster (enter below)</option>'+roster.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
-    fPick.value=''; fName.required=true; fQRep.checked=true; fQMM.checked=false;
+    fPick.value=''; fName.required=true; fQRep.checked=true; fQMM.checked=false; fQDSC.checked=false; fQCPIC.checked=false;
   }
   disarm(fDelete); dlg.showModal(); (showPick?fPick:fName).focus();
 }
@@ -536,7 +539,7 @@ document.getElementById('form').addEventListener('submit',e=>{
 });
 function arm(btn,label,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.classList.remove('arm'); btn.textContent=btn.dataset.label; fn(); return; } btn.dataset.label=btn.textContent; btn.dataset.armed='1'; btn.classList.add('arm'); btn.textContent=label; clearTimeout(btn._t); btn._t=setTimeout(()=>{delete btn.dataset.armed; btn.classList.remove('arm'); btn.textContent=btn.dataset.label;},4000); }
 function disarm(btn){ delete btn.dataset.armed; btn.classList.remove('arm'); if(btn.dataset.label)btn.textContent=btn.dataset.label; }
-function readQ(){ const q=[]; if(fQRep.checked)q.push('rep'); if(fQMM.checked)q.push('mm'); return q; }
+function readQ(){ const q=[]; if(fQRep.checked)q.push('rep'); if(fQMM.checked)q.push('mm'); if(fQDSC.checked)q.push('dsc'); if(fQCPIC.checked)q.push('cpic'); return q; }
 fCancel.onclick=()=>dlg.close();
 fDelete.onclick=()=>arm(fDelete,'Click again to delete',()=>{ const {ctx,p}=editing; const l=findList(ctx); const i=l.indexOf(p); if(i>-1)l.splice(i,1); dlg.close(); save(); render(); flash('Deleted'); });
 
@@ -580,26 +583,27 @@ excelBtn.onclick=async()=>{
     ws.eachRow(r=>{ r.alignment={wrapText:true,vertical:'top'}; r.eachCell(c=>{ c.border={bottom:{style:'thin',color:{argb:'FFD9DDE3'}}}; }); }); ws.views=[{state:'frozen',ySplit:1}]; };
   const q=p=>p.q||[]; const first=t=>(t||'').split('\n')[0];
   const sum=wb.addWorksheet('Summary');
-  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)']);
-  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','']);
-  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'']);
+  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)','CPIC presenter(s)']);
+  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','','']);
+  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'','']);
   data.divisions.forEach(d=>{
     const chief=d.members.filter(p=>p.role==='chief').map(p=>p.name).join('\n');
     const reps=d.members.filter(p=>q(p).includes('rep')).map(p=>p.name).join('\n');
     const mm=d.members.filter(p=>q(p).includes('mm')).map(p=>p.name).join('\n');
-    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned']);
+    const cp=d.members.filter(p=>q(p).includes('cpic')).map(p=>p.name).join('\n');
+    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned',cp||'']);
   });
-  style(sum,[36,40,40,40]);
+  style(sum,[32,36,36,36,36]);
   sum.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
   const ros=wb.addWorksheet('Roster');
-  ros.addRow(['Division','Name','Title','Chart role','Quality representative','M&M leader','Notes']);
+  ros.addRow(['Division','Name','Title','Chart role','Quality representative','M&M leader','Division/Section Chief','CPIC Presenter','Notes']);
   const roleLabel={chief:'Chief','section-chief':'Section chief',faculty:'Faculty',staff:'Staff','quality-rep':'Faculty'};
-  ros.addRow(['Department leadership',data.chair.name,data.chair.title,'Chair','','',data.chair.notes||'']);
-  ros.addRow(['Department leadership',data.qualityChair.name,data.qualityChair.title,'Vice Chair, Quality and Safety','','',data.qualityChair.notes||'']);
-  data.support.forEach(p=>ros.addRow(['Department quality support',p.name,p.title||'','Staff',q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',p.notes||'']));
+  ros.addRow(['Department leadership',data.chair.name,data.chair.title,'Chair','','','','',data.chair.notes||'']);
+  ros.addRow(['Department leadership',data.qualityChair.name,data.qualityChair.title,'Vice Chair, Quality and Safety','','','','',data.qualityChair.notes||'']);
+  data.support.forEach(p=>ros.addRow(['Department quality support',p.name,p.title||'','Staff',q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',q(p).includes('dsc')?'Yes':'',q(p).includes('cpic')?'Yes':'',p.notes||'']));
   data.divisions.forEach(d=>[...d.members].sort((a,b)=>(ROLE_ORDER[a.role]??9)-(ROLE_ORDER[b.role]??9)||a.name.localeCompare(b.name))
-    .forEach(p=>ros.addRow([d.name,p.name,p.title||'',roleLabel[p.role]||p.role,q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',p.notes||''])));
-  style(ros,[30,34,48,16,14,12,36]); ros.autoFilter={from:'A1',to:'G1'};
+    .forEach(p=>ros.addRow([d.name,p.name,p.title||'',roleLabel[p.role]||p.role,q(p).includes('rep')?'Yes':'',q(p).includes('mm')?'Yes':'',q(p).includes('dsc')?'Yes':'',q(p).includes('cpic')?'Yes':'',p.notes||''])));
+  style(ros,[30,34,48,16,14,12,18,14,36]); ros.autoFilter={from:'A1',to:'I1'};
   const buf=await wb.xlsx.writeBuffer();
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
   a.download='UCSF-Surgery-Quality-Org-Chart-'+new Date().toISOString().slice(0,10)+'.xlsx'; a.click(); flash('Excel file downloaded');
