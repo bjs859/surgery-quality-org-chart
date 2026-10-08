@@ -134,6 +134,10 @@ main{max-width:1500px;margin:0 auto;padding:22px 18px 60px}
 .aqi .person .title{font-size:12px}
 .aqi .empty{font-size:12.5px;color:var(--muted);font-style:italic}
 .aqi .btn{margin-top:4px}
+.cpic-month{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}
+.cpic-month .aqi-label{margin:0}
+.cpic-month .month-link{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;text-decoration:underline;text-underline-offset:2px;background:none;border:0;padding:0;cursor:pointer}
+.cpic-month .month-link:hover{color:var(--text)}
 .divisions.condensed .aqi{display:none}
 .hidden{display:none !important}
 .match{background:rgba(198,146,20,.18);border-radius:2px}
@@ -227,6 +231,14 @@ footer{max-width:1500px;margin:0 auto;padding:0 18px 40px;font-size:12.5px;color
   <div class="modal-actions">
     <button type="button" class="btn danger" id="aDelete">Delete</button>
     <div class="right"><button type="button" class="btn" id="aCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
+  </div>
+</form></dialog>
+
+<dialog id="dlgMonth"><form method="dialog" class="modal" id="formMonth">
+  <h3>CPIC presentation month</h3>
+  <div class="field"><label for="mMonth">Month</label><select id="mMonth"></select></div>
+  <div class="modal-actions"><span></span>
+    <div class="right"><button type="button" class="btn" id="mCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
   </div>
 </form></dialog>
 
@@ -432,7 +444,7 @@ const API_URL='https://script.google.com/macros/s/AKfycbx69hSfzJEbtwiNmNHf54q0uS
 function migrate(d){ const fix=p=>{ if(!p)return p; if(!Array.isArray(p.q))p.q=[]; if(p.role==='quality-rep'){p.role='faculty'; if(!p.q.includes('rep'))p.q.push('rep');}
     if(p.q.includes('dsc')){ p.q=p.q.filter(t=>t!=='dsc'); p.q.push(p.role==='section-chief'?'sc':'dc'); }
     if(p.role==='chief'&&!p.q.includes('dc'))p.q.push('dc'); if(p.role==='section-chief'&&!p.q.includes('sc'))p.q.push('sc'); return p; };
-  fix(d.chair); d.chair.q=(d.chair.q||[]).filter(t=>t!=='dc'); fix(d.qualityChair); (d.support=d.support||[]).forEach(fix); (d.viceChairs=d.viceChairs||[]).forEach(fix); d.divisions.forEach(v=>{ (v.members=v.members||[]).forEach(fix); v.aqi=Array.isArray(v.aqi)?v.aqi:[]; }); return d; }
+  fix(d.chair); d.chair.q=(d.chair.q||[]).filter(t=>t!=='dc'); fix(d.qualityChair); (d.support=d.support||[]).forEach(fix); (d.viceChairs=d.viceChairs||[]).forEach(fix); d.divisions.forEach(v=>{ (v.members=v.members||[]).forEach(fix); v.aqi=Array.isArray(v.aqi)?v.aqi:[]; v.cpicMonth=v.cpicMonth||''; }); return d; }
 const LOCAL_KEY='ucsf-surgery-quality-org-v1', PASS_KEY='ucsf-surgery-quality-org-pass';
 let writing=Promise.resolve(), pendingRender=false, lastServer='', polling=null;
 function loadLocal(){ try{const s=localStorage.getItem(LOCAL_KEY); if(s){const d=JSON.parse(s); if(d&&d.divisions) return migrate(d);} }catch(e){} return null; }
@@ -457,7 +469,7 @@ async function connect(){
     else { const local=loadLocal(); data=local||migrate(seed()); }
     sub.textContent='UCSF Health. Click any name to edit. Changes save to the shared Google Sheet and appear for every editor.';
     render();
-    polling=setInterval(async()=>{ try{ const d=await fetchServer(); const s=JSON.stringify(migrate(d)); if(s!==lastServer&&s!==JSON.stringify(data)){ lastServer=s; data=JSON.parse(s); if(dlg.open||dlgDiv.open||dlgAqi.open)pendingRender=true; else { render(); flash('Updated from shared sheet'); } } }catch(e){} },30000);
+    polling=setInterval(async()=>{ try{ const d=await fetchServer(); const s=JSON.stringify(migrate(d)); if(s!==lastServer&&s!==JSON.stringify(data)){ lastServer=s; data=JSON.parse(s); if(dlg.open||dlgDiv.open||dlgAqi.open||dlgMonth.open)pendingRender=true; else { render(); flash('Updated from shared sheet'); } } }catch(e){} },30000);
   }catch(e){
     const local=loadLocal(); if(local)data=local;
     sub.textContent='UCSF Health. Could not reach the shared sheet; showing the last copy saved in this browser. Reload to retry.'; render();
@@ -511,13 +523,21 @@ function render(){
       <div class="div-foot"><button class="btn sm" data-add="${d.id}" data-role="faculty">Add person</button></div>
       <div class="aqi"><div class="aqi-label">AQI quality representative${(d.aqi||[]).length>1?'s':''}</div>
         ${(d.aqi||[]).map(a=>`<div class="person aqi-person" data-div="${d.id}" data-aqi="${a.id}" tabindex="0"><div class="who"><div class="name">${esc(a.name)}</div>${a.notes?`<div class="title">${esc(a.notes)}</div>`:''}</div><div class="act"><button class="icon" title="Edit">&#9998;</button></div></div>`).join('')||'<div class="empty">Not yet assigned</div>'}
-        <button class="btn sm" data-addaqi="${d.id}">Add AQI rep</button></div>
+        <button class="btn sm" data-addaqi="${d.id}">Add AQI rep</button>
+        <div class="cpic-month"><span class="aqi-label">CPIC presentation month:</span>
+          <button type="button" class="month-link" data-cpicmonth="${d.id}">${esc(d.cpicMonth||'Not set')}</button></div></div>
     </section>`;
   }).join('');
   applySearch();
 }
 
 /* lookup helpers */
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const dlgMonth=document.getElementById('dlgMonth'); let editingMonthDiv=null;
+function openMonth(divId){ editingMonthDiv=data.divisions.find(x=>x.id===divId); if(!editingMonthDiv)return; mMonth.innerHTML='<option value="">Not set</option>'+MONTHS.map(m=>`<option${editingMonthDiv.cpicMonth===m?' selected':''}>${m}</option>`).join(''); dlgMonth.showModal(); mMonth.focus(); }
+document.getElementById('formMonth').addEventListener('submit',e=>{ e.preventDefault(); editingMonthDiv.cpicMonth=mMonth.value; dlgMonth.close(); save(); render(); });
+mCancel.onclick=()=>dlgMonth.close();
+document.getElementById('dlgMonth').addEventListener('close',()=>{ if(pendingRender){ pendingRender=false; render(); } });
 function orderedDivisions(){ const ped=d=>/pediatric/i.test(d.name)?1:0; return data.divisions.map((d,i)=>({d,i})).sort((a,b)=>ped(a.d)-ped(b.d)||a.i-b.i).map(x=>x.d); }
 function findList(ctx){ if(ctx==='support')return data.support; if(ctx==='viceChairs')return data.viceChairs; const d=data.divisions.find(x=>x.id===ctx); return d?d.members:null; }
 function getPerson(ctx,id){ if(ctx==='chair')return data.chair; if(ctx==='qualityChair')return data.qualityChair; return (findList(ctx)||[]).find(p=>p.id===id); }
@@ -604,6 +624,7 @@ dDelete.onclick=()=>arm(dDelete,`Click again to delete ${editingDiv.members.leng
 
 /* delegation */
 document.addEventListener('click',e=>{
+  const ml=e.target.closest('[data-cpicmonth]'); if(ml){ openMonth(ml.dataset.cpicmonth); return; }
   const addA=e.target.closest('[data-addaqi]'); if(addA){ openAqi(addA.dataset.addaqi,null); return; }
   const ap=e.target.closest('.aqi-person'); if(ap){ openAqi(ap.dataset.div,ap.dataset.aqi); return; }
   const add=e.target.closest('[data-add]'); if(add){ openEdit(add.dataset.add,null,add.dataset.role); return; }
@@ -628,18 +649,18 @@ excelBtn.onclick=async()=>{
     ws.eachRow(r=>{ r.alignment={wrapText:true,vertical:'top'}; r.eachCell(c=>{ c.border={bottom:{style:'thin',color:{argb:'FFD9DDE3'}}}; }); }); ws.views=[{state:'frozen',ySplit:1}]; };
   const q=p=>p.q||[]; const first=t=>(t||'').split('\n')[0];
   const sum=wb.addWorksheet('Summary');
-  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)','CPIC presenter(s)','AQI quality representative(s)']);
-  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','','','']);
-  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'','','']);
+  sum.addRow(['Division','Chief','Quality representative(s)','M&M leader(s)','CPIC presenter(s)','CPIC presentation month','AQI quality representative(s)']);
+  sum.addRow(['Department leadership',data.chair.name+' ('+first(data.chair.title)+')',data.qualityChair.name+' ('+first(data.qualityChair.title)+')','','','','']);
+  sum.addRow(['Department quality support','',data.support.map(p=>p.name+(first(p.title)?' ('+first(p.title)+')':'')).join('\n'),'','','','']);
   orderedDivisions().forEach(d=>{
     const chief=d.members.filter(p=>q(p).includes('dc')).map(p=>p.name).join('\n');
     const reps=d.members.filter(p=>q(p).includes('rep')).map(p=>p.name).join('\n');
     const mm=d.members.filter(p=>q(p).includes('mm')).map(p=>p.name).join('\n');
     const cp=d.members.filter(p=>q(p).includes('cpic')).map(p=>p.name).join('\n');
     const aq=(d.aqi||[]).map(a=>a.name).join('\n');
-    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned',cp||'',aq||'']);
+    sum.addRow([d.name,chief,reps||'Not yet assigned',mm||'Not yet assigned',cp||'',d.cpicMonth||'',aq||'']);
   });
-  style(sum,[30,32,32,32,32,32]);
+  style(sum,[30,32,32,32,32,18,32]);
   sum.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
   const ros=wb.addWorksheet('Roster');
   ros.addRow(['Division','Name','Title','Chart role','Quality representative','M&M leader','Division Chief','Section Chief','CPIC Presenter','Notes']);
